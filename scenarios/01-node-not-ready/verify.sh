@@ -12,7 +12,11 @@ check() {
   fi
 }
 
-_orb_exec() { orb -m k8s "$@" 2>/dev/null; }
+_k3d_cluster() {
+  kubectl get nodes --no-headers -o custom-columns=N:.metadata.name 2>/dev/null \
+    | grep "k3d-" | grep -o "k3d-[^-]*" | head -1 | sed "s/^k3d-//"
+}
+_k3d_agents() { docker ps --format '{{.Names}}' 2>/dev/null | grep "k3d-$1-agent"; }
 
 echo ""
 echo "=== Scenario 01 — Node Not Ready: Verification ==="
@@ -27,29 +31,15 @@ if kind get clusters 2>/dev/null | grep -q .; then
     STATUS=$(docker exec "$node" systemctl is-active kubelet 2>/dev/null || echo "inactive")
     check "kubelet active on $node" test "$STATUS" = "active"
   done
-
-elif k3d cluster list 2>/dev/null | grep -q .; then
-  for node in $(k3d node list 2>/dev/null | grep agent | awk '{print $1}'); do
+elif kubectl get nodes --no-headers 2>/dev/null | grep -q 'k3d-'; then
+  C=$(_k3d_cluster)
+  for node in $(_k3d_agents "$C"); do
     STATUS=$(docker exec "$node" systemctl is-active k3s-agent 2>/dev/null || echo "inactive")
     check "k3s-agent active on $node" test "$STATUS" = "active"
   done
-
 elif command -v orb &>/dev/null; then
-  if _orb_exec systemctl list-units --all k3s-agent.service | grep -q k3s-agent; then
-    STATUS=$(_orb_exec systemctl is-active k3s-agent || echo "inactive")
-    check "k3s-agent active in OrbStack VM" test "$STATUS" = "active"
-  else
-    STATUS=$(_orb_exec systemctl is-active k3s || echo "inactive")
-    check "k3s active in OrbStack VM" test "$STATUS" = "active"
-  fi
-
-elif systemctl list-units --all k3s-agent.service 2>/dev/null | grep -q k3s-agent; then
-  STATUS=$(systemctl is-active k3s-agent || echo "inactive")
-  check "k3s-agent active" test "$STATUS" = "active"
-
-elif systemctl list-units --all k3s.service 2>/dev/null | grep -q k3s; then
-  STATUS=$(systemctl is-active k3s || echo "inactive")
-  check "k3s active" test "$STATUS" = "active"
+  STATUS=$(orb systemctl is-active k3s 2>/dev/null || orb systemctl is-active k3s-agent 2>/dev/null || echo "inactive")
+  check "k3s active in OrbStack VM" test "$STATUS" = "active"
 fi
 
 PENDING=$(kubectl get pods -n kube-system --no-headers 2>/dev/null | grep -vc "Running\|Completed" || true)
