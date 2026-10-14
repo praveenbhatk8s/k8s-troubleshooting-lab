@@ -8,7 +8,7 @@ metadata:
     7 scenarios covering Node Not Ready, Disk Pressure, CreateContainerError,
     CreateContainerConfigError, ImagePullBackOff, RunContainerError, and OOMKilled.
   annotations:
-    github.com/project-slug: praveenbhat/k8s-troubleshooting-lab
+    github.com/project-slug: praveenbhatk8s/k8s-troubleshooting-lab
     backstage.io/techdocs-ref: dir:.
   tags:
     - kubernetes
@@ -18,11 +18,11 @@ metadata:
     - kind
     - cks
   links:
-    - url: https://github.com/praveenbhat/k8s-troubleshooting-lab
+    - url: https://github.com/praveenbhatk8s/k8s-troubleshooting-lab
       title: GitHub Repository
       icon: github
 spec:
   type: lab
   lifecycle: active
-  owner: user:praveenbhat
+  owner: user:praveenbhatk8s
   system: homelab

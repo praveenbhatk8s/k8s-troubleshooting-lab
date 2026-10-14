@@ -9,7 +9,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/praveenbhat/k8s-troubleshooting-lab
+    repoURL: https://github.com/praveenbhatk8s/k8s-troubleshooting-lab
     targetRevision: HEAD
     path: scenarios
     directory:
