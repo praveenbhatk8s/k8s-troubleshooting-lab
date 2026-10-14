@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: k8s-troubleshooting-lab
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: homelab
+    app.kubernetes.io/component: lab
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/praveenbhat/k8s-troubleshooting-lab
+    targetRevision: HEAD
+    path: scenarios
+    directory:
+      recurse: false   # scenarios are run manually, not synced as live resources
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated: {}
+    syncOptions:
+    - CreateNamespace=true
