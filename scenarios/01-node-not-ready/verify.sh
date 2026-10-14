@@ -12,7 +12,7 @@ check() {
   fi
 }
 
-_orb_exec() { orb run --machine k8s -- "$@" 2>/dev/null; }
+_orb_exec() { orb -m k8s "$@" 2>/dev/null; }
 
 echo ""
 echo "=== Scenario 01 — Node Not Ready: Verification ==="

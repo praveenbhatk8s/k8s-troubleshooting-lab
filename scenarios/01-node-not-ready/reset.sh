@@ -3,7 +3,7 @@ set -euo pipefail
 YELLOW='\033[1;33m'; NC='\033[0m'
 echo -e "${YELLOW}[RESET]${NC} Restarting kubelet..."
 
-_orb_exec() { orb run --machine k8s -- "$@" 2>/dev/null; }
+_orb_exec() { orb -m k8s "$@" 2>/dev/null; }
 
 if kind get clusters 2>/dev/null | grep -q .; then
   CLUSTER_NAME=$(kind get clusters | head -1)

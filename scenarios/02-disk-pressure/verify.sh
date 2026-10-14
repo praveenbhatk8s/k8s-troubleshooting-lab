@@ -12,7 +12,7 @@ check() {
   fi
 }
 
-_orb_exec() { orb run --machine k8s -- "$@" 2>/dev/null; }
+_orb_exec() { orb -m k8s "$@" 2>/dev/null; }
 
 echo ""
 echo "=== Scenario 02 — Disk Pressure: Verification ==="
@@ -34,7 +34,7 @@ elif k3d cluster list 2>/dev/null | grep -q .; then
     check "Fill file removed from $node" \
       docker exec "$node" test "!" -f /disk-pressure-lab/fill.img
   done
-elif command -v orb &>/dev/null && orb run --machine k8s -- true &>/dev/null; then
+elif command -v orb &>/dev/null && orb -m k8s true &>/dev/null; then
   check "Fill file removed from OrbStack VM" \
     bash -c '! _orb_exec test -f /tmp/disk-pressure-lab/fill.img'
 else

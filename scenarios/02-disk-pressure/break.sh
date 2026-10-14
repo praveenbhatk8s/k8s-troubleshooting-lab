@@ -7,7 +7,7 @@ RED='\033[0;31m'; YELLOW='\033[1;33m'; NC='\033[0m'
 echo -e "${RED}[BREAK]${NC} Scenario 02 — Node Disk Pressure"
 echo ""
 
-_orb_exec() { orb run --machine k8s -- "$@" 2>/dev/null; }
+_orb_exec() { orb -m k8s "$@" 2>/dev/null; }
 
 _fill_via_pod() {
   # Safe for any cluster: deploy a pod that writes to a hostPath
@@ -60,7 +60,7 @@ elif k3d cluster list 2>/dev/null | grep -q .; then
     dd if=/dev/zero of=/disk-pressure-lab/fill.img bs=1M count=3800 2>&1 | tail -1
     df -h / | tail -1"
 
-elif command -v orb &>/dev/null && orb run --machine k8s -- true &>/dev/null; then
+elif command -v orb &>/dev/null && orb -m k8s true &>/dev/null; then
   NODE=$(kubectl get nodes --no-headers | awk '{print $1}' | head -1)
   echo -e "${YELLOW}Cluster type:${NC}  OrbStack k3s  |  ${YELLOW}Target:${NC} $NODE"
   echo "Writing ~3.8 GB inside OrbStack VM ..."

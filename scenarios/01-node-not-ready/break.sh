@@ -10,7 +10,7 @@ echo ""
 
 # ── Detect cluster type ────────────────────────────────────────────────────────
 
-_orb_exec() { orb run --machine k8s -- "$@" 2>/dev/null; }
+_orb_exec() { orb -m k8s "$@" 2>/dev/null; }
 
 if kind get clusters 2>/dev/null | grep -q .; then
   CLUSTER_NAME=$(kind get clusters | head -1)
@@ -29,7 +29,7 @@ elif k3d cluster list 2>/dev/null | grep -q .; then
   echo -e "${YELLOW}Cluster type:${NC}  k3d  |  ${YELLOW}Target:${NC} $WORKER"
   docker exec "$WORKER" systemctl stop k3s-agent
 
-elif command -v orb &>/dev/null && orb run --machine k8s -- systemctl is-active k3s &>/dev/null; then
+elif command -v orb &>/dev/null && orb -m k8s systemctl is-active k3s &>/dev/null; then
   # OrbStack k3s VM
   NODE=$(kubectl get nodes --no-headers | awk '{print $1}' | head -1)
   echo -e "${YELLOW}Cluster type:${NC}  OrbStack k3s  |  ${YELLOW}Target node:${NC} $NODE"
@@ -40,7 +40,7 @@ elif command -v orb &>/dev/null && orb run --machine k8s -- systemctl is-active 
   echo -e "${YELLOW}NOTE:${NC} On a single-node OrbStack cluster the API server also stops."
   echo "The node will show NotReady when you restart k3s and the API comes back."
 
-elif command -v orb &>/dev/null && orb run --machine k8s -- systemctl is-active k3s-agent &>/dev/null; then
+elif command -v orb &>/dev/null && orb -m k8s systemctl is-active k3s-agent &>/dev/null; then
   NODE=$(kubectl get nodes --no-headers | grep -v "control-plane\|master" | awk '{print $1}' | head -1)
   echo -e "${YELLOW}Cluster type:${NC}  OrbStack k3s (agent)  |  ${YELLOW}Target node:${NC} $NODE"
   _orb_exec sudo systemctl stop k3s-agent
