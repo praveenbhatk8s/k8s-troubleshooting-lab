@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
+
+# Auto-detect OrbStack Docker socket
+if [[ -S "${HOME}/.orbstack/run/docker.sock" ]]; then
+  export DOCKER_HOST="unix://${HOME}/.orbstack/run/docker.sock"
+fi
 GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
 PASS=0; FAIL=0
 

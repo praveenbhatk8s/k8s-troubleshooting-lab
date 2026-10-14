@@ -2,6 +2,11 @@
 # Scenario 01 — Node Not Ready
 set -euo pipefail
 
+# Auto-detect OrbStack Docker socket
+if [[ -S "${HOME}/.orbstack/run/docker.sock" ]]; then
+  export DOCKER_HOST="unix://${HOME}/.orbstack/run/docker.sock"
+fi
+
 RED='\033[0;31m'; YELLOW='\033[1;33m'; NC='\033[0m'
 
 echo -e "${RED}[BREAK]${NC} Scenario 01 — Node Not Ready"
