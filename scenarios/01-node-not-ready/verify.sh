@@ -39,8 +39,9 @@ if kind get clusters 2>/dev/null | grep -q .; then
 elif kubectl get nodes --no-headers 2>/dev/null | grep -q 'k3d-'; then
   C=$(_k3d_cluster)
   for node in $(_k3d_agents "$C"); do
-    STATUS=$(docker exec "$node" systemctl is-active k3s-agent 2>/dev/null || echo "inactive")
-    check "k3s-agent active on $node" test "$STATUS" = "active"
+    # k3d containers have no systemd — check via pgrep
+    STATUS=$(docker exec "$node" pgrep -f "k3s" &>/dev/null && echo "active" || echo "inactive")
+    check "k3s process running on $node" test "$STATUS" = "active"
   done
 elif command -v orb &>/dev/null; then
   STATUS=$(orb systemctl is-active k3s 2>/dev/null || orb systemctl is-active k3s-agent 2>/dev/null || echo "inactive")

@@ -17,6 +17,23 @@ _k3d_cluster() {
     | grep "k3d-" | grep -o "k3d-[^-]*" | head -1 | sed "s/^k3d-//"
 }
 
+_stop_kubelet() {
+  local container="$1"
+  # k3d containers run k3s directly (no systemd) — kill the process
+  if docker exec "$container" which systemctl &>/dev/null; then
+    docker exec "$container" systemctl stop kubelet 2>/dev/null \
+      || docker exec "$container" systemctl stop k3s-agent 2>/dev/null
+  else
+    # No systemd — kill k3s agent process directly
+    docker exec "$container" sh -c 'pkill -f "k3s agent" || pkill -f "k3s-agent" || kill $(cat /var/run/k3s-agent.pid 2>/dev/null) 2>/dev/null || true'
+    sleep 1
+    # Verify it's gone
+    if docker exec "$container" pgrep -f "k3s" &>/dev/null; then
+      docker exec "$container" sh -c 'kill -9 $(pgrep -f "k3s") 2>/dev/null || true'
+    fi
+  fi
+}
+
 if kind get clusters 2>/dev/null | grep -q .; then
   CLUSTER_NAME=$(kind get clusters | head -1)
   WORKER=$(docker ps --format '{{.Names}}' | grep "${CLUSTER_NAME}-worker" | head -1)
@@ -33,14 +50,13 @@ elif kubectl get nodes --no-headers 2>/dev/null | grep -q 'k3d-'; then
     echo -e "${RED}No k3d agent container found.${NC}"; exit 1
   fi
   echo -e "${YELLOW}Cluster type:${NC}  k3d (${C})  |  ${YELLOW}Target:${NC} $WORKER"
-  docker exec "$WORKER" systemctl stop k3s-agent
+  echo "Stopping k3s agent process on $WORKER ..."
+  _stop_kubelet "$WORKER"
 
 elif command -v orb &>/dev/null; then
   NODE=$(kubectl get nodes --no-headers | awk '{print $1}' | head -1)
   echo -e "${YELLOW}Cluster type:${NC}  OrbStack  |  ${YELLOW}Target:${NC} $NODE"
-  echo "Stopping k3s inside OrbStack VM ..."
   orb sudo systemctl stop k3s 2>/dev/null || orb sudo systemctl stop k3s-agent 2>/dev/null
-  echo -e "${YELLOW}NOTE:${NC} API server may also stop on a single-node cluster."
 
 elif systemctl is-active --quiet k3s-agent 2>/dev/null; then
   echo -e "${YELLOW}Cluster type:${NC}  k3s bare (agent)"
@@ -52,9 +68,7 @@ elif systemctl is-active --quiet k3s 2>/dev/null; then
   sudo systemctl stop k3s
 
 else
-  echo -e "${RED}Could not detect cluster type.${NC}"
-  echo "Supported: kind, k3d (detected via node names), OrbStack, bare k3s"
-  exit 1
+  echo -e "${RED}Could not detect cluster type.${NC}"; exit 1
 fi
 
 echo ""
